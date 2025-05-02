@@ -1,0 +1,61 @@
+#pragma once
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#ifdef PROJECT_F103
+// =============================================================================
+// [PROJECT SYSTEM CONFIGURATION]
+// =============================================================================
+#define PROJECT_NAME        "PROJECT_F103"
+#define PROJECT_VERSION     "0.0.1"
+#define PROJECT_AUTHOR      "mkkim"
+#define PROJECT_MCU         STM32F103C8T6
+#define PROJECT_RTOS        FREERTOS
+#define PROJECT_SDK         STM32
+#define PROJECT_LOG_ENABLE  1
+#define PROJECT_TIMER_ENABLE    1
+#if PROJECT_TIMER_ENABLE
+    #define TIMER_INTERVAL  10
+#endif
+
+// =============================================================================
+// [PROJECT RTOS CONFIGURATION]
+// =============================================================================
+#ifdef PROJECT_RTOS
+    #define THREAD_STACK_SIZE           512 // byte
+    #define REQUEST_MAX_COUNT           4         
+    #define REQUEST_PAYLOAD_MAX_SIZE    256
+    #define REQUEST_BUFFER_SIZE         REQUEST_MAX_COUNT * REQUEST_PAYLOAD_MAX_SIZE    
+#endif
+
+// =============================================================================
+// [PERIPHERAL CONFIGURATION]
+// =============================================================================
+
+// DMA
+#define DMA_ENABLE          0
+#if DMA_ENABLE
+    #define DMA_UART        1
+#endif
+
+// UART
+#define UART UART_INTERNAL
+#if UART
+    #define UART_MAX_CHANNEL    1
+#endif
+
+// =============================================================================
+// [SENSOR / MODULE CONFIGURATION]
+// =============================================================================
+
+// LED
+#define LED LED_PWM
+
+
+#endif// PROJECT_F103
+
+#ifdef __cplusplus
+}
+#endif

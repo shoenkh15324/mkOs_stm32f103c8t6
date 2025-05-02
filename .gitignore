@@ -1,0 +1,66 @@
+# 빌드 결과물
+build/
+Debug/*
+Release/*
+*.o
+*.d
+*.obj
+*.elf
+*.hex
+*.bin
+*.map
+*.lst
+
+# IDE 및 편집기 관련 파일
+Drivers/
+.settings/
+.vscode/
+.idea/
+*.launch
+*.ioc.tmp
+.mxproject
+build.ninja
+*.ioc
+
+# CMAKE 관련
+cmake/
+cMakeFiles/
+cmake_install.cmake
+CMakeCache.txt
+CMakePresets.json
+compile_commands.json
+
+# STM32CubeMX 자동 생성 백업 파일
+*.ioc.bak
+
+# Keil MDK 관련 파일
+*.uvguix.*
+*.uvoptx
+*.uvprojx.bak
+*.scvd
+*.uvguix
+JLinkLog.txt
+JLinkSettings.ini
+
+# IAR 관련 파일
+*.ewd
+*.ewp
+*.eww
+settings/
+*.dep
+*.ewt
+*.dni
+
+# Eclipse 관련 파일
+.project
+.cproject
+.pydevproject
+
+# 임시 파일
+*.bak
+*.tmp
+*~
+.DS_Store
+
+# 로그 파일
+*.log
