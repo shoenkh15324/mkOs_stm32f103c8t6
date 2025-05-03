@@ -30,7 +30,7 @@ int Led::open(void* arg){
 
 int Led::sync(int32_t sync, void *arg1, void *arg2, void *arg3, void *arg4){
      if(_objState < objStateOpened){
-          LOG("Uart is not opened");
+          LOG("Led is not opened");
           return -1;
      }
      MutexLock ML(&_objMutex);
@@ -60,22 +60,24 @@ int Led::sync(int32_t sync, void *arg1, void *arg2, void *arg3, void *arg4){
      return 0;
 }
 
-void Led::_ledBlinking(int8_t repeatCnt, uint16_t onTime, uint16_t offTime){
-     uint32_t tickGap = Oal::getTick() - _ledTick;
-     if(_repeatCnt < repeatCnt || repeatCnt == -1){
-          if(tickGap >= 0 && tickGap < onTime){
-               HAL_GPIO_WritePin(LED_GPIO_TYPE, LED_GPIO_PIN, GPIO_PIN_RESET);// LED ON
-          }else if(tickGap >= onTime && tickGap < (onTime + offTime)){
-               HAL_GPIO_WritePin(LED_GPIO_TYPE, LED_GPIO_PIN, GPIO_PIN_SET);// LED OFF
-          }else{
-               if(repeatCnt != -1){
-                    _repeatCnt++;
-               }
-               _ledTick = Oal::getTick();
-          }
-     }else{
-          HAL_GPIO_WritePin(LED_GPIO_TYPE, LED_GPIO_PIN, GPIO_PIN_SET);
+void Led::_ledBlinking(int8_t repeatCnt, uint16_t onTime, uint16_t offTime) {
+     uint32_t now = Oal::getTick();
+     uint32_t elapsed = now - _ledTick;
+
+     if (_repeatCnt >= repeatCnt && repeatCnt != -1) {
+          HAL_GPIO_WritePin(LED_GPIO_TYPE, LED_GPIO_PIN, GPIO_PIN_SET); // LED OFF
           _objState = objStateOpened;
+          return;
+     }
+     if (elapsed < onTime) {
+          HAL_GPIO_WritePin(LED_GPIO_TYPE, LED_GPIO_PIN, GPIO_PIN_RESET); // LED ON
+     } else if (elapsed < onTime + offTime) {
+          HAL_GPIO_WritePin(LED_GPIO_TYPE, LED_GPIO_PIN, GPIO_PIN_SET);   // LED OFF
+     } else {
+          _ledTick = now;
+          if (repeatCnt != -1) {
+               ++_repeatCnt;
+          }
      }
 }
 #endif

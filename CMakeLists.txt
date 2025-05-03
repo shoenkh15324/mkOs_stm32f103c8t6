@@ -39,6 +39,7 @@ enable_language(C CXX ASM)
 # Compile Flag
 add_compile_options(-Wno-unused-parameter)
 add_compile_options(-Wno-format)
+add_compile_options(-Os)
 
 # Create an executable object type
 add_executable(${CMAKE_PROJECT_NAME})
@@ -59,6 +60,7 @@ file(GLOB SRC_FILES CONFIGURE_DEPENDS
     Core/mkOS/source/hal/*.cpp
     Core/mkOS/source/hal/uart/*.cpp
     Core/mkOS/source/hal/led/*.cpp
+    Core/mkOS/source/hal/usb/*.cpp
     Core/mkOS/external/freeRtos/*.c
     Core/mkOS/external/freeRtos/portable/ARM_CM3/*.c
 )
@@ -81,6 +83,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     Core/mkOS/include/hal
     Core/mkOS/include/hal/uart
     Core/mkOS/include/hal/led
+    Core/mkOS/include/hal/usb
     Core/mkOS/external
     Core/mkOS/external/freeRtos/include
     Core/mkOS/external/freeRtos/portable/ARM_CM3

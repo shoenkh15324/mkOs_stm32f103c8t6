@@ -40,6 +40,9 @@ extern "C" {
     #define DMA_UART        1
 #endif
 
+// USB
+#define USB_DEVICE USB_CDC
+
 // UART
 #define UART UART_INTERNAL
 #if UART

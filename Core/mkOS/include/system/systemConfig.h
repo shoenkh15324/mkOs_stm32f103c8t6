@@ -43,6 +43,15 @@ extern "C" {
 #define UART_INTERNAL       1
 #define UART_XXX            2
 
+// USB
+#define USB_CDC             1
+#define USB_ADC             2
+#define USB_DFU             3
+#define USB_HID             4
+#define USB_CUSTOM_HID      5
+#define USB_MSC             6
+#define USB_XXX             7
+
 // I2C
 #define I2C_INTERNAL        1
 #define I2C_XXX             2

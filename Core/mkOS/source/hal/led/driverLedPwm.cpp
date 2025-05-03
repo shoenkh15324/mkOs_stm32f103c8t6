@@ -33,7 +33,7 @@ int Led::open(void* arg){
 
 int Led::sync(int32_t sync, void *arg1, void *arg2, void *arg3, void *arg4){
      if(_objState < objStateOpened){
-          LOG("Uart is not opened");
+          LOG("Led is not opened");
           return -1;
      }
      MutexLock ML(&_objMutex);
@@ -64,45 +64,49 @@ int Led::sync(int32_t sync, void *arg1, void *arg2, void *arg3, void *arg4){
      return 0;
 }
 
-void Led::_ledFading(TIM_HandleTypeDef *htim, uint32_t ch, int8_t repeatCnt, uint16_t risingTime, uint16_t onTime, uint16_t fallingTime, uint16_t offTime){
-     uint32_t tickGap = Oal::getTick() - _ledTick;
+void Led::_ledFading(TIM_HandleTypeDef *htim, uint32_t ch, int8_t repeatCnt, uint16_t risingTime, uint16_t onTime, uint16_t fallingTime, uint16_t offTime) {
+     uint32_t now = Oal::getTick();
+     uint32_t elapsed = now - _ledTick;
      uint32_t totalCycle = risingTime + onTime + fallingTime + offTime;
-     if (_repeatCnt < repeatCnt || repeatCnt == -1){
-          if (tickGap < risingTime){
-               _dutyCycle = (LED_DUTYCYCLE_MAX * tickGap) / risingTime;
-          }else if (tickGap < risingTime + onTime){
-               _dutyCycle = LED_DUTYCYCLE_MAX;
-          }else if (tickGap < risingTime + onTime + fallingTime){
-               uint32_t t = tickGap - (risingTime + onTime);
-               _dutyCycle = LED_DUTYCYCLE_MAX - (LED_DUTYCYCLE_MAX * t) / fallingTime;
-          }else if (tickGap < totalCycle){
-               _dutyCycle = 0;
-          }else{
-               _ledTick = Oal::getTick();
-               _dutyCycle = 0;
-               if (repeatCnt != -1) _repeatCnt++;
-          }
-          __HAL_TIM_SET_COMPARE(htim, ch, _dutyCycle);
-     }else{
+
+     if (_repeatCnt >= repeatCnt && repeatCnt != -1) {
           _objState = objStateOpened;
+          return;
      }
+     if (elapsed < risingTime) {
+          _dutyCycle = (LED_DUTYCYCLE_MAX * elapsed) / risingTime;
+     } else if (elapsed < risingTime + onTime) {
+          _dutyCycle = LED_DUTYCYCLE_MAX;
+     } else if (elapsed < risingTime + onTime + fallingTime) {
+          uint32_t t = elapsed - (risingTime + onTime);
+          _dutyCycle = LED_DUTYCYCLE_MAX - (LED_DUTYCYCLE_MAX * t) / fallingTime;
+     } else if (elapsed < totalCycle) {
+          _dutyCycle = 0;
+     } else {
+          _ledTick = now;
+          _dutyCycle = 0;
+          if (repeatCnt != -1) ++_repeatCnt;
+     }
+     __HAL_TIM_SET_COMPARE(htim, ch, _dutyCycle);
 }
 
-void Led::_ledBlinking(TIM_HandleTypeDef *htim, uint32_t ch, int8_t repeatCnt, uint16_t onTime, uint16_t offTime){
-     uint32_t tickGap = Oal::getTick() - _ledTick;
-     if(_repeatCnt < repeatCnt || repeatCnt == -1){
-          if(tickGap >= 0 && tickGap < onTime){
-               __HAL_TIM_SET_COMPARE(htim, ch, LED_DUTYCYCLE_MAX); 
-          }else if(tickGap >= onTime && tickGap < (onTime + offTime)){
-               __HAL_TIM_SET_COMPARE(htim, ch, 0); 
-          }else{
-               if(repeatCnt != -1){
-                    _repeatCnt++;
-               }
-               _ledTick = Oal::getTick();
-          }
-     }else{
+void Led::_ledBlinking(TIM_HandleTypeDef *htim, uint32_t ch, int8_t repeatCnt, uint16_t onTime, uint16_t offTime) {
+     uint32_t now = Oal::getTick();
+     uint32_t elapsed = now - _ledTick;
+
+     if (_repeatCnt >= repeatCnt && repeatCnt != -1) {
           _objState = objStateOpened;
+          return;
+     }
+     if (elapsed < onTime) {
+          __HAL_TIM_SET_COMPARE(htim, ch, LED_DUTYCYCLE_MAX);
+     } else if (elapsed < onTime + offTime) {
+          __HAL_TIM_SET_COMPARE(htim, ch, 0);
+     } else {
+          _ledTick = now;
+          if (repeatCnt != -1) {
+               ++_repeatCnt;
+          }
      }
 }
 #endif
