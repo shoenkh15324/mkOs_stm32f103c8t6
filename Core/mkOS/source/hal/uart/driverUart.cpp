@@ -4,7 +4,9 @@
 #include "usart.h"
 #include "stm32f1xx_hal_uart.h"
 
-Uart *Uart::_this = nullptr;
+Uart Uart::_instance;
+
+Uart::Uart(){}
 
 int Uart::close(){
      if(_objState >= objStateOpened){

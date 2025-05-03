@@ -1,4 +1,4 @@
-#include "../../include/application/application.h"
+#include "../../include/application/project/stm32f103/application.h"
 
 //Object
 int Object::getObjState(){
@@ -27,6 +27,10 @@ int ActiveObject::close(){
 }
 
 int ActiveObject::open(void *arg){
+     if(!arg){
+          LOG("arg == NULL");
+          return -1;
+     }
      MutexLock ML(&_objMutex);
      _threadMetadata = *(threadMetadata *)arg;
      _requestQueue.open(_threadMetadata.requestBufferSize);
@@ -83,7 +87,8 @@ int ActiveObject::sync(int32_t sync, void *arg1, void *arg2, void *arg3, void *a
 
 int mkOsOpen(){
 #if dgCfgSdkOs == egCfgSdkOsFreeRtos
-     xTaskCreate(Application::threadOpen, "mainThread", THREAD_STACK_SIZE, NULL, 1, NULL);
+     Application* app = Application::get();
+     xTaskCreate(Application::_applicationOpen, "mainThread", THREAD_STACK_SIZE, app, 1, NULL);
      vTaskStartScheduler();
      LOG("Should not reach here if scheduler started.");
      for (;;);

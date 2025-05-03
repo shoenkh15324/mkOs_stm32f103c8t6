@@ -17,20 +17,16 @@ public:
           ledStatePowerOff,
      };
 
-protected:
-     static Led *_this;
+private:
+     static Led _instance;
+     Led() : _ledTick(0), _repeatCnt(0) {}
+     Led(const Led&) = delete; 
+     Led& operator=(const Led&) = delete;
 public:
-     static inline Led* get(){
-          if(_this){
-               return _this;
-          }
-          _this = new Led;
-          return _this;
-     }
-protected:
-     uint32_t _ledTick = 0;
-     uint8_t _repeatCnt = 0;
-
+     static inline Led* get() { return &_instance; }
+private:
+     uint32_t _ledTick;
+     uint8_t _repeatCnt;
 public:
      int close();
      int open(void * = nullptr);

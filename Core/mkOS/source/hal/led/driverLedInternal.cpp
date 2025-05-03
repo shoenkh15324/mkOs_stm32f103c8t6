@@ -8,7 +8,7 @@
 #if LED == LED_INTERNAL
 #include "gpio.h"
 
-Led *Led::_this = nullptr;
+Led Led::_instance;
 
 int Led::close(){
      if(_objState >= objStateOpened){

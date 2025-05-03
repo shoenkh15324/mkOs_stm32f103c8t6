@@ -11,20 +11,16 @@ public:
           uartReceiveDma,
 #endif
      };
-protected:
-     static Uart *_this;
+private:
+     static Uart _instance;
+     Uart();
+     Uart(const Uart &) = delete;
+     Uart& operator=(const Uart &) = delete;
 public:
-     static inline Uart* get(){
-          if(_this){
-               return _this;
-          }
-          _this = new Uart;
-          return _this;
-     }
+     static inline Uart *get() { return &_instance; }
 public:
      int close();
      int open(void * = nullptr);
      int sync(int32_t, void * = nullptr, void * = nullptr, void * = nullptr, void * = nullptr);
 };
-
 #endif

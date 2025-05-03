@@ -3,7 +3,7 @@
 #include "systemConfig.h"
 
 enum{
-     systemSyncXXX= 0,
+     sysSyncUsbCdcRxQueuePush= 0,
 };
 
 #ifdef __cplusplus

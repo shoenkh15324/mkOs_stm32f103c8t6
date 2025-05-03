@@ -1,10 +1,11 @@
-#pragma once
+#pragma once//TODO/Need Optimization
 #if USB_DEVICE == USB_CDC
 
 class Usb : public Object{
 public:
      enum{// USB CDC Sync
           usbCdcSend = Object::syncBegin,
+          usbCdcReceive,//TODO/Need Implement
      };
 protected:
      static Usb *_this;

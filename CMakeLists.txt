@@ -53,7 +53,6 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 )
 
 file(GLOB SRC_FILES CONFIGURE_DEPENDS
-    Core/mkOS/source/application/*.cpp
     Core/mkOS/source/application/project/stm32f103/*.cpp
     Core/mkOS/source/system/*.cpp
     Core/mkOS/source/oal/*.cpp
@@ -76,7 +75,6 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user defined include paths
     Core/mkOS
     Core/mkOS/include
-    Core/mkOS/include/application
     Core/mkOS/include/application/project/stm32f103
     Core/mkOS/include/system
     Core/mkOS/include/oal
@@ -100,6 +98,5 @@ target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE
 # Add linked libraries
 target_link_libraries(${CMAKE_PROJECT_NAME}
     stm32cubemx
-
     # Add user defined libraries
 )

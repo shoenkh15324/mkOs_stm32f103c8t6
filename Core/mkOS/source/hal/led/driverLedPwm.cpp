@@ -9,7 +9,7 @@
 #if LED == LED_PWM
 #include "tim.h"
 
-Led *Led::_this = nullptr;
+Led Led::_instance;
 
 int Led::close(){
      if(_objState >= objStateOpened){

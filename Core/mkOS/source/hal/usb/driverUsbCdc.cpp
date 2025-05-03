@@ -1,7 +1,9 @@
 #include "../../include/hal/hal.h"
 
 #if USB_DEVICE == USB_CDC
+#include "usbd_cdc.h"
 #include "usbd_cdc_if.h"
+#include "usbd_cdc_if_template.h"
 
 Usb *Usb::_this = nullptr;
 
@@ -36,6 +38,9 @@ int Usb::sync(int32_t sync, void *arg1, void *arg2, void *arg3, void *arg4){
                if(USBD_OK != CDC_Transmit_FS(buf, len)){
                     return -1;
                }
+               break;
+          }
+          case usbCdcReceive:{
                break;
           }
           default:
