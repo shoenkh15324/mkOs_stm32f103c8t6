@@ -5,6 +5,8 @@
 #include "stm32f1xx_hal_uart.h"
 
 Uart Uart::_instance;
+extern UART_HandleTypeDef huart1;
+extern DMA_HandleTypeDef hdma_usart1_rx;
 
 Uart::Uart(){}
 
@@ -13,6 +15,9 @@ int Uart::close(){
           _objState = objStateClosing;
           MutexLock ML(&_objMutex);
           //
+#if DMA_UART
+          _rxBuf.close();
+#endif
           _objState = objStateClosed;
      }
      return 0;
@@ -21,6 +26,15 @@ int Uart::close(){
 int Uart::open(void* arg){
      MutexLock ML(&_objMutex);
      close();
+     //
+#if DMA_UART
+     _rxBuf.open();
+     if(HAL_UART_Receive_DMA(&huart1, (uint8_t*)_rxBuf.rxBuf, PROJECT_RXBUFFER_SIZE) != HAL_OK){
+          return -1;
+     }
+     _rxBuf.head = PROJECT_RXBUFFER_SIZE - hdma_usart1_rx.Instance->CNDTR;
+     _rxBuf.tail = _rxBuf.head;
+#endif
      //
      _objState = objStateOpened;
      return 0;
@@ -32,31 +46,67 @@ int Uart::sync(int32_t sync, void *arg1, void *arg2, void *arg3, void *arg4){
           return -1;
      }
      MutexLock ML(&_objMutex);
-
-     UART_HandleTypeDef *channel = static_cast<UART_HandleTypeDef *>(arg1);
-     uint8_t *data = static_cast<uint8_t *>(arg2);
-     uint16_t size = static_cast<uint16_t>(reinterpret_cast<intptr_t>(arg3));
-     auto handleResult = [](HAL_StatusTypeDef status, const char* errMsg){
-          if (status != HAL_OK) {
-               LOG("%s", errMsg);
+     UART_HandleTypeDef *uartChannel = _uartChannelConfig(arg1);
+     switch (sync) {
+          case uartSend:{
+               uint8_t *data = static_cast<uint8_t *>(arg2);
+               uint16_t size = static_cast<uint16_t>(reinterpret_cast<intptr_t>(arg3));
+               if(HAL_UART_Transmit(uartChannel, data, size, HAL_MAX_DELAY) != HAL_OK){
+                    LOG("uartSend Fail");
+                    return -1;
+               }
+               break;
+          }
+          case uartReceive:{
+               uint8_t *data = static_cast<uint8_t *>(arg2);
+               uint16_t size = static_cast<uint16_t>(reinterpret_cast<intptr_t>(arg3));
+               if(HAL_UART_Receive(uartChannel, data, size, 10) != HAL_OK){
+                    LOG("uartReceive Fail");
+                    return -1;
+               }
+               break;
+          }
+#if DMA_UART
+          case uartReadDma:{
+               uint8_t *buf = static_cast<uint8_t *>(arg1);
+               uint16_t len = static_cast<uint16_t>(reinterpret_cast<intptr_t>(arg2));
+               _rxBuf.head = PROJECT_RXBUFFER_SIZE - hdma_usart1_rx.Instance->CNDTR;
+               if(_rxBuf.available()){
+                    _rxBuf.read(buf, len);
+                    return 0;
+               }
                return -1;
           }
-          return 0;
-     };
-     switch (sync) {
-          case uartSend:
-               return handleResult(HAL_UART_Transmit(channel, data, size, HAL_MAX_DELAY), "uartSend Fail");
-          case uartReceive:
-               return handleResult(HAL_UART_Receive(channel, data, size, HAL_MAX_DELAY), "uartReceive Fail");
-     #if DMA_UART
-          case uartSendDma:
-               return handleResult(HAL_UART_Transmit_DMA(channel, data, size), "uartSendDma Fail");
-          case uartReceiveDma:
-               return handleResult(HAL_UART_Receive_DMA(channel, data, size), "uartReceiveDma Fail");
-     #endif
+#endif
           default:
                LOG("Unregistered sync");
-               return -1;
+               break;
      }
+     return 0;
+}
+
+UART_HandleTypeDef * Uart::_uartChannelConfig(void* arg){
+     UART_HandleTypeDef *ret = nullptr;
+     switch(static_cast<uint16_t>(reinterpret_cast<intptr_t>(arg))){
+          case CH1:
+               ret = &huart1;
+               break;
+#if UART_MAX_CHANNEL >= 2
+          case CH2:
+               ret = &huart2;
+               break;
+#endif
+#if UART_MAX_CHANNEL >= 3
+          case CH3:
+               ret = &huart3;
+               break;
+#endif
+#if UART_MAX_CHANNEL >= 4
+          case CH4:
+               ret = &huart4;
+               break;
+#endif
+     }
+     return ret;
 }
 #endif

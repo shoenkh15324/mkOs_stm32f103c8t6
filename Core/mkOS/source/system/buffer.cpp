@@ -65,3 +65,45 @@ int RequestQueue::pull(uint8_t *request, int requestSize){
     totalRequestSize -= requestSize;
     return requestSize;
 }
+
+// RxBuffer
+bool RxBuffer::open() {
+    reset();
+    return true;
+}
+
+void RxBuffer::close() {
+    reset();
+}
+
+void RxBuffer::reset() {
+    head = 0;
+    tail = 0;
+}
+
+bool RxBuffer::available() {
+    return head != tail;
+}
+
+bool RxBuffer::read(uint8_t* buf, uint16_t len) {
+    uint16_t count = 0;
+    while (count < len && available()) {
+        buf[count++] = rxBuf[tail];
+        tail = (tail + 1) % PROJECT_RXBUFFER_SIZE;
+    }
+    return count > 0;
+}
+
+bool RxBuffer::write(const uint8_t* buf, uint16_t len) {
+    uint16_t count = 0;
+    while (count < len) {
+        uint16_t nextHead = (head + 1) % PROJECT_RXBUFFER_SIZE;
+        if (nextHead == tail) {
+            break;
+        }
+        rxBuf[head] = buf[count++];
+        head = nextHead;
+    }
+    return count > 0;
+}
+

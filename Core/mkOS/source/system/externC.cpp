@@ -4,8 +4,12 @@
 
 void* systemSync(int32_t sync , void* arg1, void* arg2, void* arg3, void* arg4){
      switch(sync){
-          case sysSyncUsbCdcRxQueuePush:
+#if USB_DEVICE == USB_CDC
+          case sysSyncUsbCdcRxCallback:{
+               Application::get()->sync(Application::syncRequestPayload, (void*)Application::appUsbCdcRxCallback, arg1, arg2);
                break;
+          }
+#endif
           default:
                break;
      }

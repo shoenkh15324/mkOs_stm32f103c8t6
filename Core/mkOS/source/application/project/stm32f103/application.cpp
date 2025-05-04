@@ -75,17 +75,27 @@ void Application::_threadHandler(){
                popRequest(_requestIsrQueue);
                popRequest(_requestQueue);
           }
+
      }
 }
 
 void Application::_requestHandler(request* request, uint8_t* payload){
+     uint8_t rxData = {0};
      switch(request->sync){
-          case appTimer:{
+          case appTimer:{  
                Led::get()->sync(Led::ledTimer);
-               uint8_t buf[] = "Hello USB";
-               Usb::get()->sync(Usb::usbCdcSend, buf, (void*)(uintptr_t)sizeof(buf));
+               Uart::get()->sync(Uart::uartReadDma, &rxData, (void *)1);
+               if(rxData){
+                    Uart::get()->sync(Uart::uartSend, (void*)Uart::CH1, &rxData, (void *)1);
+               }
                break;
           }
+#if USB_DEVICE == USB_CDC
+          case appUsbCdcRxCallback:{
+               Usb::get()->sync(Usb::usbCdcRxCallback, (void*)payload, (void*)request->payloadSize);
+               break;
+          }
+#endif
      }
 }
 

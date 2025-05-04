@@ -33,7 +33,7 @@ extern "C" {
 #include "../oal/oal.h"
 
 // LOG
-#ifdef PROJECT_LOG_ENABLE
+#if PROJECT_LOG_ENABLE
 extern "C" {
      #include "stm32f1xx_hal_uart.h"
      #include "usart.h"
@@ -46,7 +46,7 @@ extern "C" {
           HAL_UART_Transmit(&LOG_UART_INSTANCE, reinterpret_cast<uint8_t*>(buf), len, HAL_MAX_DELAY); \
      } while(0)
 #else
-     #define Log(fmt, ...) do {} while(0)
+     #define LOG(fmt, ...) do {} while(0)
 #endif
 
 // Object

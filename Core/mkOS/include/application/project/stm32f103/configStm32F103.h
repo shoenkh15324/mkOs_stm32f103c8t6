@@ -19,6 +19,7 @@ extern "C" {
 #if PROJECT_TIMER_ENABLE
     #define TIMER_INTERVAL  10
 #endif
+#define PROJECT_RXBUFFER_SIZE   256 
 
 // =============================================================================
 // [PROJECT RTOS CONFIGURATION]
@@ -35,13 +36,16 @@ extern "C" {
 // =============================================================================
 
 // DMA
-#define DMA_ENABLE          0
+#define DMA_ENABLE          1
 #if DMA_ENABLE
     #define DMA_UART        1
 #endif
 
 // USB
-#define USB_DEVICE USB_CDC
+#define USB_DEVICE USB_XXX
+#if USB_DEVICE == USB_CDC
+    #define USB_CDC_RX_QUEUE_SIZE   258
+#endif
 
 // UART
 #define UART UART_INTERNAL

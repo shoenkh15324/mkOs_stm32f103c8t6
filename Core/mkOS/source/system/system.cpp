@@ -81,7 +81,6 @@ int ActiveObject::sync(int32_t sync, void *arg1, void *arg2, void *arg3, void *a
                return -1;
           }
      }
-
      return 0;
 }
 

@@ -8,6 +8,9 @@ class Application : public ActiveObject{
 public:
      enum{
           appTimer = 0,
+#if USB_DEVICE == USB_CDC
+          appUsbCdcRxCallback,
+#endif
      };
 private:
      static Application _instance;
