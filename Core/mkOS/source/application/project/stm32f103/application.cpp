@@ -1,7 +1,9 @@
 #if PROJECT_F103
-
 #include "../../../../include/application/project/stm32f103/application.h"
 #include "../../include/hal/hal.h"//TODO/move to service.h
+#if PROJECT_CLI_ENABLE
+#include "cli.h"
+#endif
 
 Application Application::_instance;
 
@@ -18,7 +20,7 @@ int Application::open(void * arg){
                LOG("mkOs thread open fail");
                return -1;
           }
-          Uart::get()->open();
+          Cli::get()->open();
           Led::get()->open();
           Led::get()->sync(Led::ledPowerOn);
 
@@ -80,22 +82,12 @@ void Application::_threadHandler(){
 }
 
 void Application::_requestHandler(request* request, uint8_t* payload){
-     uint8_t rxData = {0};
      switch(request->sync){
           case appTimer:{  
                Led::get()->sync(Led::ledTimer);
-               Uart::get()->sync(Uart::uartReadDma, &rxData, (void *)1);
-               if(rxData){
-                    Uart::get()->sync(Uart::uartSend, (void*)Uart::CH1, &rxData, (void *)1);
-               }
+               Cli::get()->sync(Cli::cliSyncMain);
                break;
           }
-#if USB_DEVICE == USB_CDC
-          case appUsbCdcRxCallback:{
-               Usb::get()->sync(Usb::usbCdcRxCallback, (void*)payload, (void*)request->payloadSize);
-               break;
-          }
-#endif
      }
 }
 

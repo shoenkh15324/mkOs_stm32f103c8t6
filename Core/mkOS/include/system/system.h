@@ -1,7 +1,6 @@
 #pragma once
 
 extern "C" {
-     //#include <stdint.h>
      #include <stdlib.h>
      #include <stdio.h>
      #include <stdarg.h>
@@ -33,7 +32,7 @@ extern "C" {
 #include "../oal/oal.h"
 
 // LOG
-#if PROJECT_LOG_ENABLE
+#if LOG == LOG_UART
 extern "C" {
      #include "stm32f1xx_hal_uart.h"
      #include "usart.h"
@@ -45,8 +44,20 @@ extern "C" {
           int len = snprintf(buf, sizeof(buf), "[mkOS] %s/%d : " fmt "\r\n", __func__, __LINE__, ##__VA_ARGS__); \
           HAL_UART_Transmit(&LOG_UART_INSTANCE, reinterpret_cast<uint8_t*>(buf), len, HAL_MAX_DELAY); \
      } while(0)
-#else
-     #define LOG(fmt, ...) do {} while(0)
+#elif LOG == LOG_PRINTF
+     #include <cstdio>
+     #include <cstdarg>
+
+     inline void log_printf(const char* format, ...) {
+     std::printf("[mkOs] ");
+     va_list args;
+     va_start(args, format);
+     std::vprintf(format, args);
+     va_end(args);
+     std::printf("\n");
+     }
+
+     #define LOG(fmt, ...)    log_printf(fmt, ##__VA_ARGS__)
 #endif
 
 // Object

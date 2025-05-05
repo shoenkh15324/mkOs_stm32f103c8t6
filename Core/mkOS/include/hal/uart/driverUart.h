@@ -13,8 +13,9 @@ public:
           uartSend = Object::syncBegin,
           uartReceive,
 #if DMA_UART
-          uartWriteDma,
+          uartAvailableDma,
           uartReadDma,
+          uartWriteDma,
 #endif
      };
 private:
@@ -31,5 +32,6 @@ public:
      int close();
      int open(void * = nullptr);
      int sync(int32_t, void * = nullptr, void * = nullptr, void * = nullptr, void * = nullptr);
+     static void printf(const char *format, ...);
 };
 #endif

@@ -67,15 +67,15 @@ int Uart::sync(int32_t sync, void *arg1, void *arg2, void *arg3, void *arg4){
                break;
           }
 #if DMA_UART
+          case uartAvailableDma:{
+               _rxBuf.head = PROJECT_RXBUFFER_SIZE - hdma_usart1_rx.Instance->CNDTR;
+               return _rxBuf.available();
+          }
           case uartReadDma:{
                uint8_t *buf = static_cast<uint8_t *>(arg1);
                uint16_t len = static_cast<uint16_t>(reinterpret_cast<intptr_t>(arg2));
-               _rxBuf.head = PROJECT_RXBUFFER_SIZE - hdma_usart1_rx.Instance->CNDTR;
-               if(_rxBuf.available()){
-                    _rxBuf.read(buf, len);
-                    return 0;
-               }
-               return -1;
+               _rxBuf.read(buf, len);
+               break;
           }
 #endif
           default:
