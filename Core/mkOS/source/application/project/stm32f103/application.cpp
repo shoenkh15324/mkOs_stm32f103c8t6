@@ -15,7 +15,7 @@ int Application::close(){
 int Application::open(void * arg){
      {
           MutexLock ML(&_objMutex);
-          threadMetadata _mainThread = {0, _threadProcedure, REQUEST_BUFFER_SIZE, REQUEST_BUFFER_SIZE, REQUEST_PAYLOAD_MAX_SIZE};
+          threadMetadata _mainThread = {0, _threadProcedure, MESSAGE_QUEUE_SIZE, MESSAGE_QUEUE_SIZE, MESSAGE_PAYLOAD_MAX_SIZE};
           if(ActiveObject::open(&_mainThread)){
                LOG("mkOs thread open fail");
                return -1;
@@ -65,8 +65,8 @@ void Application::_threadHandler(){
      while (true) {
           if (_activeObjectSema.take()) {
                MutexLock lock(&_objMutex);
-               auto popRequest = [&](RequestQueue& queue) {
-                    while (queue.totalRequestSize > static_cast<int>(sizeof(req))) {
+               auto popRequest = [&](MessageQueue& queue) {
+                    while (queue.totalMessageSize > static_cast<int>(sizeof(req))) {
                          queue.pull(reinterpret_cast<uint8_t*>(&req), sizeof(req));
                          if (req.payloadSize) {
                          queue.pull(_requestPayload, req.payloadSize);
@@ -74,8 +74,8 @@ void Application::_threadHandler(){
                          _requestHandler(&req, _requestPayload);
                     }
                };
-               popRequest(_requestIsrQueue);
-               popRequest(_requestQueue);
+               popRequest(_messageIsrQueue);
+               popRequest(_messageQueue);
           }
 
      }
@@ -92,7 +92,7 @@ void Application::_requestHandler(request* request, uint8_t* payload){
 }
 
 void Application::_timerHandler(TimerHandle_t xTimer){
-     Application::get()->sync(syncRequest, (void*)appTimer);
+     Application::get()->sync(async, (void*)appTimer);
 }
 
 void Application::_applicationOpen(void* arg){

@@ -170,11 +170,11 @@ int Cli::sync(int32_t sync, void *arg1, void *arg2, void *arg3, void *arg4){
                          }
                          if(rxData == CLI_KEY_UP){
                               this->sync(cliSyncLineChange, NULL, (void*)true);
-                              cliPrintf((char *)_cli.line.buf);//TODO/Need Check
+                              cliPrintf((char *)_cli.line.buf);
                          }
                          if(rxData == CLI_KEY_DOWN){
                               this->sync(cliSyncLineChange, NULL, (void*)false);
-                              cliPrintf((char *)_cli.line.buf);//TODO/Need Check
+                              cliPrintf((char *)_cli.line.buf);
                          }
                          if(rxData == CLI_KEY_HOME){
                               cliPrintf("\x1B[%dD", line->cursorPos);

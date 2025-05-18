@@ -34,9 +34,9 @@ extern "C" {
 // =============================================================================
 #ifdef PROJECT_RTOS
     #define THREAD_STACK_SIZE           512 // byte
-    #define REQUEST_MAX_COUNT           4         
-    #define REQUEST_PAYLOAD_MAX_SIZE    256
-    #define REQUEST_BUFFER_SIZE         REQUEST_MAX_COUNT * REQUEST_PAYLOAD_MAX_SIZE    
+    #define MESSAGE_MAX_COUNT           4         
+    #define MESSAGE_PAYLOAD_MAX_SIZE    256
+    #define MESSAGE_QUEUE_SIZE          MESSAGE_MAX_COUNT * MESSAGE_PAYLOAD_MAX_SIZE    
 #endif
 
 // =============================================================================

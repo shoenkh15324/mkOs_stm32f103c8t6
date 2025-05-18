@@ -1,68 +1,68 @@
 #include "../../include/application/project/stm32f103/application.h"
 
-RequestQueue::RequestQueue() = default;
+MessageQueue::MessageQueue() = default;
 
-RequestQueue::~RequestQueue(){
+MessageQueue::~MessageQueue(){
     close();
 }
 
-int RequestQueue::open(int bufferSize){
+int MessageQueue::open(int queueSize){
     close();
-    if(bufferSize < 1 || bufferSize > REQUEST_BUFFER_SIZE) {
-        LOG("bufferSize(%d) invalid", bufferSize);
+    if(queueSize < 1 || queueSize > MESSAGE_QUEUE_SIZE) {
+        LOG("queueSize(%d) invalid", queueSize);
         return -1;
     }
-    _bufferSize = bufferSize;
+    _queueSize = queueSize;
     return 0;
 }
 
-void RequestQueue::close(){
+void MessageQueue::close(){
     reset();
-    _bufferSize = 0;
+    _queueSize = 0;
 }
 
-void RequestQueue::reset(){
-    _readIdx = _writeIdx = totalRequestSize = 0;
+void MessageQueue::reset(){
+    _readIdx = _writeIdx = totalMessageSize = 0;
 }
 
-int RequestQueue::canPush() const {
-    //LOG("_bufferSize:%d, totalRequestSize: %d", _bufferSize, totalRequestSize);
-    return _bufferSize - totalRequestSize;
+int MessageQueue::canPush() const {
+    //LOG("_queueSize:%d, totalMessageSize: %d", _queueSize, totalMessageSize);
+    return _queueSize - totalMessageSize;
 }
 
-int RequestQueue::push(const uint8_t *request, int requestSize){
-    if(!_requestBuffer || !request || requestSize <= 0 || requestSize > canPush()) {
+int MessageQueue::push(const uint8_t *request, int requestSize){
+    if(!_messageQueue || !request || requestSize <= 0 || requestSize > canPush()) {
         LOG("push failed: buffer=%p, request=%p, requestSize=%d, canPush=%d",
-            _requestBuffer, request, requestSize, canPush());
+            _messageQueue, request, requestSize, canPush());
         return 0;
     }
-    int firstChunk = std::min(_bufferSize - _writeIdx, requestSize);
-    std::copy_n(request, firstChunk, &_requestBuffer[_writeIdx]);
+    int firstChunk = std::min(_queueSize - _writeIdx, requestSize);
+    std::copy_n(request, firstChunk, &_messageQueue[_writeIdx]);
 
     int remaining = requestSize - firstChunk;
     if (remaining > 0) {
-        std::copy_n(request + firstChunk, remaining, &_requestBuffer[0]);
+        std::copy_n(request + firstChunk, remaining, &_messageQueue[0]);
     }
-    _writeIdx = (_writeIdx + requestSize) % _bufferSize;
-    totalRequestSize += requestSize;
+    _writeIdx = (_writeIdx + requestSize) % _queueSize;
+    totalMessageSize += requestSize;
     return requestSize;
 }
 
-int RequestQueue::pull(uint8_t *request, int requestSize){
-    if(!_requestBuffer || !request || requestSize <= 0 || requestSize > totalRequestSize) {
+int MessageQueue::pull(uint8_t *request, int requestSize){
+    if(!_messageQueue || !request || requestSize <= 0 || requestSize > totalMessageSize) {
         LOG("pull failed: buffer=%p, requestSize=%d, total=%d",
-            _requestBuffer, requestSize, totalRequestSize);
+            _messageQueue, requestSize, totalMessageSize);
         return 0;
     }
-    int firstChunk = std::min(_bufferSize - _readIdx, requestSize);
-    std::copy_n(&_requestBuffer[_readIdx], firstChunk, request);
+    int firstChunk = std::min(_queueSize - _readIdx, requestSize);
+    std::copy_n(&_messageQueue[_readIdx], firstChunk, request);
 
     int remaining = requestSize - firstChunk;
     if (remaining > 0) {
-        std::copy_n(&_requestBuffer[0], remaining, request + firstChunk);
+        std::copy_n(&_messageQueue[0], remaining, request + firstChunk);
     }
-    _readIdx = (_readIdx + requestSize) % _bufferSize;
-    totalRequestSize -= requestSize;
+    _readIdx = (_readIdx + requestSize) % _queueSize;
+    totalMessageSize -= requestSize;
     return requestSize;
 }
 

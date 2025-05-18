@@ -6,7 +6,7 @@ void* systemSync(int32_t sync , void* arg1, void* arg2, void* arg3, void* arg4){
      switch(sync){
 #if USB_DEVICE == USB_CDC
           case sysSyncUsbCdcRxCallback:{
-               Application::get()->sync(Application::syncRequestPayload, (void*)Application::appUsbCdcRxCallback, arg1, arg2);
+               Application::get()->sync(Application::asyncPayload, (void*)Application::appUsbCdcRxCallback, arg1, arg2);
                break;
           }
 #endif

@@ -33,8 +33,8 @@ int ActiveObject::open(void *arg){
      }
      MutexLock ML(&_objMutex);
      _threadMetadata = *(threadMetadata *)arg;
-     _requestQueue.open(_threadMetadata.requestBufferSize);
-     _requestIsrQueue.open(_threadMetadata.requestIsrBufferSize);
+     _messageQueue.open(_threadMetadata.messageQueueSize);
+     _messageIsrQueue.open(_threadMetadata.messageIsrQueueSize);
      return 0;
 }
 
@@ -44,10 +44,10 @@ int ActiveObject::sync(int32_t sync, void *arg1, void *arg2, void *arg3, void *a
           return -1;
      }
      const bool inIsr = Oal::isInIsr();
-     RequestQueue &queue = inIsr ? _requestIsrQueue : _requestQueue;
+     MessageQueue &queue = inIsr ? _messageIsrQueue : _messageQueue;
 
      switch (sync) {
-          case syncRequest: {
+          case async: {
                request req = {(unsigned)arg1, arg2, arg3, arg4, 0};
                if (queue.push(reinterpret_cast<uint8_t*>(&req), sizeof(req)) != sizeof(req)) {
                     LOG("requestQueue.push fail");
@@ -56,10 +56,10 @@ int ActiveObject::sync(int32_t sync, void *arg1, void *arg2, void *arg3, void *a
                _activeObjectSema.give();
                break;
           }
-          case syncRequestPayload: {
+          case asyncPayload: {
                int payloadSize = reinterpret_cast<intptr_t>(arg3);
-               if (payloadSize > _threadMetadata.requestPayloadMaxSize) {
-                    LOG("%d > requestPayloadMaxSize(%d)", payloadSize, _threadMetadata.requestPayloadMaxSize);
+               if (payloadSize > _threadMetadata.asyncPayloadMaxSize) {
+                    LOG("%d > asyncPayloadMaxSize(%d)", payloadSize, _threadMetadata.asyncPayloadMaxSize);
                     return -1;
                }
                request req = {(unsigned)arg1, arg4, nullptr, nullptr, (uint16_t)payloadSize};
@@ -72,7 +72,7 @@ int ActiveObject::sync(int32_t sync, void *arg1, void *arg2, void *arg3, void *a
                _activeObjectSema.give();
                break;
           }
-          case syncRequestExpress: {
+          case asyncExpress: {
                _activeObjectSema.give();
                break;
           }

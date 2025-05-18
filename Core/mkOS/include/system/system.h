@@ -26,7 +26,6 @@ extern "C" {
 #include <algorithm>
 #include <cstdint>
 #include <memory>
-
 #include "systemConfig.h"
 #include "buffer.h"
 #include "../oal/oal.h"
@@ -69,12 +68,15 @@ public:
           objStateOpened,
           objStateBegin,
      };
+
      enum{
           syncBegin = 0,
      };
+
 protected:
      int _objState = objStateClosed;
      OalMutex _objMutex;
+
 public:
 #if 0
      virtual int close() = 0;
@@ -88,6 +90,7 @@ public:
 class MutexLock{
 protected:
      OalMutex *_mutex = nullptr;
+
 public:
      MutexLock(OalMutex *mutex);
      ~MutexLock();
@@ -96,18 +99,20 @@ public:
 // ActiveObject
 class ActiveObject : public Object{
 public:
-     enum{
-          syncRequest = syncBegin,
-          syncRequestPayload,
-          syncRequestExpress,
+     enum{// ActiveObject Sync
+          async = syncBegin,
+          asyncPayload,
+          asyncExpress,
      };
+
      typedef struct{
           int16_t threadStackSize;
           void (*fnProcedure)(void*);
-          int16_t requestBufferSize;
-          int16_t requestIsrBufferSize;
-          int16_t requestPayloadMaxSize;
+          int16_t messageQueueSize;
+          int16_t messageIsrQueueSize;
+          int16_t asyncPayloadMaxSize;
      } threadMetadata;
+
      typedef struct{
           int16_t sync;
           void *hArg1;
@@ -115,10 +120,12 @@ public:
           void *hArg3;
           uint16_t payloadSize;
      } request;
+
 protected:
-     RequestQueue _requestQueue, _requestIsrQueue;
+     MessageQueue _messageQueue, _messageIsrQueue;
      OalSemaphore _activeObjectSema;
      threadMetadata _threadMetadata;
+
 public:
      ActiveObject();
      int close();

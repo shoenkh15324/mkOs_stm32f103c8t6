@@ -1,21 +1,21 @@
 #pragma once
 
-class RequestQueue{
+class MessageQueue{
 protected:
-     uint8_t _requestBuffer[REQUEST_BUFFER_SIZE]{};
-     int _bufferSize = 0;
+     uint8_t _messageQueue[MESSAGE_QUEUE_SIZE]{};
+     int _queueSize = 0;
      int _readIdx = 0, _writeIdx = 0;
 public:
-     int totalRequestSize = 0;
+     int totalMessageSize = 0;
 
-     RequestQueue();
-     ~RequestQueue();
+     MessageQueue();
+     ~MessageQueue();
      int open(int);
      void close();
      void reset();
      int canPush() const;
-     int push(const uint8_t *request, int requestSize);
-     int pull(uint8_t *request, int requestSize);
+     int push(const uint8_t *, int);
+     int pull(uint8_t *, int);
 };
 
 class RxBuffer{

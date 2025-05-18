@@ -1,5 +1,4 @@
 #pragma once
-#define PROJECT_CLI_ENABLE 1//TODO/remove
 #if PROJECT_CLI_ENABLE
 
 #define CLI_KEY_BACK          0x08
