@@ -5,12 +5,12 @@
 #include "configStm32F103.h"
 
 class Application : public ActiveObject{
+     friend int mkOsOpen();
+     friend int ActiveObject::sync(int32_t, void*, void*, void*, void*);
+
 public:
      enum{
           appTimer = 0,
-#if USB_DEVICE == USB_CDC
-          appUsbCdcRxCallback,
-#endif
      };
      
 private:
@@ -26,14 +26,15 @@ public:
      int close();
      int open(void * = nullptr);
      int sync(int32_t, void* = nullptr, void* = nullptr, void* = nullptr, void* = nullptr);
-     static void _threadProcedure(void *);
-     static void _applicationOpen(void *);
-
+     
 protected:
      TimerHandle_t _appTimer;
-     alignas(4) uint8_t _requestPayload[MESSAGE_PAYLOAD_MAX_SIZE];
+     alignas(4) uint8_t _messagePayload[MESSAGE_PAYLOAD_MAX_SIZE];
+     void _popMessage();
      void _threadHandler();
-     void _requestHandler(request*, uint8_t*);
+     void _messageHandler(message*, uint8_t*);
      static void _timerHandler(TimerHandle_t);
+     static void _threadProcedure(void *);
+     static void _applicationOpen(void *);
 };
 #endif

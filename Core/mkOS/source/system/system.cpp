@@ -48,9 +48,9 @@ int ActiveObject::sync(int32_t sync, void *arg1, void *arg2, void *arg3, void *a
 
      switch (sync) {
           case async: {
-               request req = {(unsigned)arg1, arg2, arg3, arg4, 0};
-               if (queue.push(reinterpret_cast<uint8_t*>(&req), sizeof(req)) != sizeof(req)) {
-                    LOG("requestQueue.push fail");
+               message msg = {(unsigned)arg1, arg2, arg3, arg4, 0};
+               if (queue.push(reinterpret_cast<uint8_t*>(&msg), sizeof(msg)) != sizeof(msg)) {
+                    LOG("messageQueue.push fail");
                     return -1;
                }
                _activeObjectSema.give();
@@ -62,35 +62,56 @@ int ActiveObject::sync(int32_t sync, void *arg1, void *arg2, void *arg3, void *a
                     LOG("%d > asyncPayloadMaxSize(%d)", payloadSize, _threadMetadata.asyncPayloadMaxSize);
                     return -1;
                }
-               request req = {(unsigned)arg1, arg4, nullptr, nullptr, (uint16_t)payloadSize};
-               if (queue.canPush() < ((int)sizeof(req) + (int)payloadSize)) {
-                    LOG("requestQueue.canPush() < (request:%d + payload:%d)", sizeof(req), payloadSize);
+               message msg = {(unsigned)arg1, arg4, nullptr, nullptr, (uint16_t)payloadSize};
+               if (queue.canPush() < ((int)sizeof(msg) + (int)payloadSize)) {
+                    LOG("messageQueue.canPush() < (message:%d + payload:%d)", sizeof(msg), payloadSize);
                     return -1;
                }
-               queue.push(reinterpret_cast<uint8_t*>(&req), sizeof(req));
+               queue.push(reinterpret_cast<uint8_t*>(&msg), sizeof(msg));
                queue.push(reinterpret_cast<uint8_t*>(arg2), payloadSize);
                _activeObjectSema.give();
                break;
           }
-          case asyncExpress: {
+          case asyncAwait:{
+               message msg = {(unsigned)arg1, arg2, arg3, arg4, 0};
+               if (queue.push(reinterpret_cast<uint8_t*>(&msg), sizeof(msg)) != sizeof(msg)) {
+                    LOG("messageQueue.push fail");
+                    return -1;
+               }
+               _activeObjectSema.give();
+
+               while(_response.completed){
+                    Application::get()->_popMessage();
+               }
+               return _response.result;
+          }
+          case asyncPayloadAwait:{
+               int payloadSize = reinterpret_cast<intptr_t>(arg3);
+               if (payloadSize > _threadMetadata.asyncPayloadMaxSize) {
+                    LOG("%d > asyncPayloadMaxSize(%d)", payloadSize, _threadMetadata.asyncPayloadMaxSize);
+                    return -1;
+               }
+               message msg = {(unsigned)arg1, arg4, nullptr, nullptr, (uint16_t)payloadSize};
+               if (queue.canPush() < ((int)sizeof(msg) + (int)payloadSize)) {
+                    LOG("messageQueue.canPush() < (message:%d + payload:%d)", sizeof(msg), payloadSize);
+                    return -1;
+               }
+               queue.push(reinterpret_cast<uint8_t*>(&msg), sizeof(msg));
+               queue.push(reinterpret_cast<uint8_t*>(arg2), payloadSize);
+               _activeObjectSema.give();
+
+               while(_response.completed){
+                    Application::get()->_popMessage();
+               }
+               return _response.result;
+          }
+          case asyncExpress:
                _activeObjectSema.give();
                break;
-          }
-          default: {
+          default:
                LOG("Unregistered Sync: %d", sync);
                return -1;
-          }
      }
      return 0;
 }
 
-int mkOsOpen(){
-#if dgCfgSdkOs == egCfgSdkOsFreeRtos
-     Application* app = Application::get();
-     xTaskCreate(Application::_applicationOpen, "mainThread", THREAD_STACK_SIZE, app, 1, NULL);
-     vTaskStartScheduler();
-     LOG("Should not reach here if scheduler started.");
-     for (;;);
-     return 0;
-#endif
-}

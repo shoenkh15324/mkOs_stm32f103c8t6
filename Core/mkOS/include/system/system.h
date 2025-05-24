@@ -78,7 +78,7 @@ protected:
      OalMutex _objMutex;
 
 public:
-#if 0
+#if 1
      virtual int close() = 0;
      virtual int open(void * = nullptr) = 0;
      virtual int sync(int32_t , void* = nullptr, void* = nullptr, void* = nullptr, void* = nullptr) = 0;
@@ -102,6 +102,8 @@ public:
      enum{// ActiveObject Sync
           async = syncBegin,
           asyncPayload,
+          asyncAwait,
+          asyncPayloadAwait,
           asyncExpress,
      };
 
@@ -114,29 +116,29 @@ public:
      } threadMetadata;
 
      typedef struct{
+          volatile bool completed = false;
+          int result = 0;
+     } awaitResponse;
+
+     typedef struct{
           int16_t sync;
           void *hArg1;
           void *hArg2;
           void *hArg3;
           uint16_t payloadSize;
-     } request;
+     } message;
 
 protected:
      MessageQueue _messageQueue, _messageIsrQueue;
      OalSemaphore _activeObjectSema;
      threadMetadata _threadMetadata;
 
+private:
+     awaitResponse _response;
+
 public:
      ActiveObject();
      int close();
-     int open(void* = nullptr);
-     int sync(int32_t sync, void* = nullptr, void* = nullptr, void* = nullptr, void* = nullptr);
+     int open(void*);
+     int sync(int32_t, void*, void*, void*, void*);
 };
-
-#ifdef __cplusplus
-extern "C"{
-#endif
-     int mkOsOpen();
-#ifdef __cplusplus
-}
-#endif

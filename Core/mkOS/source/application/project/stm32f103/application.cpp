@@ -9,6 +9,12 @@ Application Application::_instance;
 
 int Application::close(){
      MutexLock ML(&_objMutex);
+#if PROJECT_TIMER_ENABLE
+     if(pdPASS != xTimerDelete(_appTimer, portMAX_DELAY)){
+          LOG("Delete Timer Fail");
+          return -1;
+     }
+#endif
      return ActiveObject::close();
 }
 
@@ -51,6 +57,10 @@ int Application::sync(int32_t sync, void* arg1, void* arg2, void* arg3, void* ar
      return ActiveObject::sync(sync, arg1, arg2, arg3, arg4);
 }
 
+void Application::_applicationOpen(void* arg){
+     Application::get()->open();
+}
+
 void Application::_threadProcedure(void* arg){
      auto* app = static_cast<Application*>(arg);
      if (app) app->_threadHandler();
@@ -61,42 +71,45 @@ void Application::_threadHandler(){
           LOG("Application is not opened");
           return;
      }
-     request req;
      while (true) {
           if (_activeObjectSema.take()) {
-               MutexLock lock(&_objMutex);
-               auto popRequest = [&](MessageQueue& queue) {
-                    while (queue.totalMessageSize > static_cast<int>(sizeof(req))) {
-                         queue.pull(reinterpret_cast<uint8_t*>(&req), sizeof(req));
-                         if (req.payloadSize) {
-                         queue.pull(_requestPayload, req.payloadSize);
-                         }
-                         _requestHandler(&req, _requestPayload);
-                    }
-               };
-               popRequest(_messageIsrQueue);
-               popRequest(_messageQueue);
+               _popMessage();
           }
-
      }
 }
 
-void Application::_requestHandler(request* request, uint8_t* payload){
-     switch(request->sync){
+void Application::_popMessage(){
+     message req;
+     MutexLock lock(&_objMutex);
+     auto popMessage = [&](MessageQueue& queue) {
+          while (queue.totalMessageSize > static_cast<int>(sizeof(req))) {
+               queue.pull(reinterpret_cast<uint8_t*>(&req), sizeof(req));
+               if (req.payloadSize) {
+               queue.pull(_messagePayload, req.payloadSize);
+               }
+               _messageHandler(&req, _messagePayload);
+          }
+     };
+     popMessage(_messageIsrQueue);
+     popMessage(_messageQueue);
+}
+
+void Application::_messageHandler(message* message, uint8_t* payload){
+     switch(message->sync){
           case appTimer:{  
                Led::get()->sync(Led::ledTimer);
                Cli::get()->sync(Cli::cliSyncMain);
                break;
           }
+          // await
+
+          default:
+               break;
      }
 }
 
 void Application::_timerHandler(TimerHandle_t xTimer){
      Application::get()->sync(async, (void*)appTimer);
-}
-
-void Application::_applicationOpen(void* arg){
-     Application::get()->open();
 }
 
 #endif
